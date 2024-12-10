@@ -7,21 +7,6 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 exports.signupUser = async (req, res) => {
   const { userid, password } = req.body;
 
-  // Check if the user already exists
-  const { data: existingUser, error: checkError } = await supabase
-    .from('sample')
-    .select('*')
-    .eq('userid', userid)
-    .single();
-
-  if (checkError) {
-    return res.status(500).json({ message: 'Error checking user existence' });
-  }
-
-  if (existingUser) {
-    return res.status(400).json({ message: 'User already exists' });
-  }
-
   // Insert the new user with default role 'pending'
   const { data: newUser, error: insertError } = await supabase
     .from('sample')
@@ -52,6 +37,7 @@ exports.signupUser = async (req, res) => {
 
   res.status(201).json({ token });
 };
+
 // Login Function (unchanged)
 exports.loginUser = async (req, res) => {
   const { userid, password } = req.body;
@@ -84,4 +70,77 @@ exports.getProtectedData = (req, res) => {
     return res.json({ message: 'Welcome User' });
   }
   res.status(403).json({ message: 'Access Denied' });
+};
+
+exports.getAllUsers = async (req, res) => {
+  const { role } = req.user;
+
+  if (role !== 'admin') {
+    return res.status(403).json({ message: 'Only admins can view all users' });
+  }
+
+  const { data: users, error } = await supabase.from('sample').select('*');
+
+  if (error) {
+    return res.status(500).json({ message: 'Error fetching users' });
+  }
+
+  res.json(users);
+};
+
+// Promote a user to a new role (admin or user)
+exports.promoteUser = async (req, res) => {
+  const { role } = req.user;
+
+  if (role !== 'admin') {
+    return res.status(403).json({ message: 'Only admins can promote users' });
+  }
+
+  const { userid, newRole } = req.body;  // Expect userid and the new role (e.g., 'user' or 'admin')
+
+  if (!userid || !newRole) {
+    return res.status(400).json({ message: 'User ID and new role are required' });
+  }
+
+  if (newRole !== 'user' && newRole !== 'admin') {
+    return res.status(400).json({ message: 'Invalid role' });
+  }
+
+  const { data, error } = await supabase
+    .from('sample')
+    .update({ role: newRole })
+    .eq('userid', userid)
+    .select(); // Return updated user data
+
+  if (error) {
+    return res.status(500).json({ message: 'Error promoting user' });
+  }
+
+  res.json({ message: 'User promoted successfully', user: data[0] });
+};
+
+// Delete a user
+exports.deleteUser = async (req, res) => {
+  const { role } = req.user;
+
+  if (role !== 'admin') {
+    return res.status(403).json({ message: 'Only admins can delete users' });
+  }
+
+  const { userid } = req.body;  // Expect userid of the user to delete
+
+  if (!userid) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  const { error } = await supabase
+    .from('sample')
+    .delete()
+    .eq('userid', userid);
+
+  if (error) {
+    return res.status(500).json({ message: 'Error deleting user' });
+  }
+
+  res.json({ message: 'User deleted successfully' });
 };
