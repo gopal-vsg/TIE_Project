@@ -1,65 +1,102 @@
 const { createClient } = require('@supabase/supabase-js');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt'); // Import bcrypt for password hashing
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// Signup Function (No user existence check)
+// Signup Function
 exports.signupUser = async (req, res) => {
   const { userid, password } = req.body;
 
-  // Insert the new user with default role 'pending'
-  const { data: newUser, error: insertError } = await supabase
-    .from('sample')
-    .insert([
-      {
-        userid,
-        password,
-        role: 'pending',  // Set default role
-      }
-    ])
-    .select();  // Ensure we get the inserted user data back
+  try {
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
+    // Check if the user already exists
+    const { data: existingUser, error: fetchError } = await supabase
+      .from('sample')
+      .select('*')
+      .eq('userid', userid)
+      .single();
 
-  if (insertError) {
-    return res.status(500).json({ message: 'Error creating user' });
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      // Handle any unexpected errors (except "no rows found")
+      console.error('Error fetching user:', fetchError);
+      return res.status(500).json({ message: 'Error checking for existing user' });
+    }
+
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+
+    // Insert the new user with hashed password
+    const { data: newUser, error: insertError } = await supabase
+      .from('sample')
+      .insert([
+        {
+          userid,
+          password: hashedPassword, // Store hashed password
+          role: 'pending', // Set default role
+        }
+      ])
+      .select(); // Ensure we get the inserted user data back
+
+    if (insertError) {
+      return res.status(500).json({ message: 'Error creating user' });
+    }
+
+    if (!newUser || newUser.length === 0) {
+      return res.status(500).json({ message: 'User not created' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userid: newUser[0].userid, role: newUser[0].role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRATION }
+    );
+
+    res.status(201).json({ token });
+  } catch (err) {
+    res.status(500).json({ message: 'Error during signup', error: err.message });
   }
-
-  // Check if the insertion returned data
-  if (!newUser || newUser.length === 0) {
-    return res.status(500).json({ message: 'User not created' });
-  }
-
-  // Generate JWT token
-  const token = jwt.sign(
-    { userid: newUser[0].userid, role: newUser[0].role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRATION }
-  );
-
-  res.status(201).json({ token });
 };
 
-// Login Function (unchanged)
+// Login Function
 exports.loginUser = async (req, res) => {
   const { userid, password } = req.body;
 
-  const { data: user, error } = await supabase
-    .from('sample')
-    .select('*')
-    .eq('userid', userid)
-    .single();
+  try {
+    // Fetch user from the database
+    const { data: user, error } = await supabase
+      .from('sample')
+      .select('*')
+      .eq('userid', userid)
+      .single();
 
-  if (error || !user || user.password !== password) {
-    return res.status(401).json({ message: 'Invalid credentials' });
+    if (error || !user) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Compare the hashed password with the plain text password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userid: user.userid, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRATION }
+    );
+
+    res.json({ token });
+  } catch (err) {
+    res.status(500).json({ message: 'Error during login', error: err.message });
   }
-
-  const token = jwt.sign(
-    { userid: user.userid, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRATION }
-  );
-
-  res.json({ token });
 };
+
 
 // Protected Data Function (unchanged)
 exports.getProtectedData = (req, res) => {
