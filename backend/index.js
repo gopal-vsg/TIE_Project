@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors'); // Importing CORS
 const authRoutes = require('./routes/authRoutes'); // Import the routes
+const dataRoutes = require('./routes/dataRoutes')
 
 const app = express();
 
@@ -12,6 +13,8 @@ app.use(express.json());
 
 // Use routes from authRoutes
 app.use('/api/auth', authRoutes);
+
+app.use('/api/data',dataRoutes);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
