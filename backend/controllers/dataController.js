@@ -97,27 +97,3 @@ exports.deleteBooking = async (req, res) => {
 
   res.status(200).json({ message: 'Booking deleted successfully', data });
 };
-
-// Get user by name
-exports.getUserByName = async (req, res) => {
-  const { name } = req.params;  // Get the name from the request parameter
-
-  // Query the database for the user with the given name using trigram similarity
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .ilike('name', `%${name}%`)  // Case-insensitive partial matching
-    .order('name', { nullsFirst: true })  // Optionally, order by the search field
-    .limit(1);
-
-  if (error) {
-    console.error('Error fetching user:', error);
-    return res.status(500).json({ message: 'Error retrieving user', error });
-  }
-
-  if (!data || data.length === 0) {
-    return res.status(404).json({ message: 'User not found' });
-  }
-
-  res.status(200).json({ message: 'User retrieved successfully', data });
-};

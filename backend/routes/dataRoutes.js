@@ -18,7 +18,4 @@ router.put('/:id', authMiddleware(['user', 'admin']), bookingController.updateBo
 // Delete a booking (allowed for 'user' and 'admin')
 router.delete('/:id', authMiddleware(['user', 'admin']), bookingController.deleteBooking);
 
-// Get user by name
-router.get('/user/:name', authMiddleware, bookingController.getUserByName);
-
 module.exports = router;
