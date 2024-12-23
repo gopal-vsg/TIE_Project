@@ -3,14 +3,19 @@ const router = express.Router();
 const authMiddleware = require('../middlewares/authMiddleware');
 const bookingController = require('../controllers/dataController');
 
-router.post('/add', authMiddleware, bookingController.addBooking);
+// Add a new booking (allowed for 'user' and 'admin')
+router.post('/add', authMiddleware(['user', 'admin']), bookingController.addBooking);
 
-router.get('/', authMiddleware, bookingController.getAllBookings);
+// Get all bookings (allowed for all authenticated roles)
+router.get('/', authMiddleware(), bookingController.getAllBookings);
 
-router.get('/:id', authMiddleware, bookingController.getBookingById);
+// Get a single booking by ID (allowed for all authenticated roles)
+router.get('/:id', authMiddleware(), bookingController.getBookingById);
 
-router.put('/:id', authMiddleware, bookingController.updateBooking);
+// Update a booking (allowed for 'user' and 'admin')
+router.put('/:id', authMiddleware(['user', 'admin']), bookingController.updateBooking);
 
-router.delete('/:id', authMiddleware, bookingController.deleteBooking);
+// Delete a booking (allowed for 'user' and 'admin')
+router.delete('/:id', authMiddleware(['user', 'admin']), bookingController.deleteBooking);
 
 module.exports = router;

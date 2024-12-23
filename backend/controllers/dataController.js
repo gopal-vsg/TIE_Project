@@ -5,7 +5,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 // Add a new booking
 exports.addBooking = async (req, res) => {
   const { role } = req.user; // Extract role from decoded JWT in middleware
-  const { name, pax, hotel, room_no, pay_status } = req.body;
+  const { customer_name, room_number, check_in_date, check_out_date, created_at, property_id, total_pax, room_type, no_of_rooms, mobile_no, email_id, tariff, market_segment, business_source, advance_payment, payment_mode, special_instructions, booking_id } = req.body;
 
   // Allow only users or admins to insert data
   if (role !== 'user' && role !== 'admin') {
@@ -13,8 +13,8 @@ exports.addBooking = async (req, res) => {
   }
   //c'mon man you are 
   const { data, error } = await supabase
-    .from('sample_data')
-    .insert([{ name, pax, hotel, room_no, pay_status }]);
+    .from('bookings')
+    .insert([{ customer_name, room_number, check_in_date, check_out_date, created_at, property_id, total_pax, room_type, no_of_rooms, mobile_no, email_id, tariff, market_segment, business_source, advance_payment, payment_mode, special_instructions, booking_id }]);
 
   if (error) {
     return res.status(500).json({ message: 'Error adding booking', error });
@@ -26,7 +26,7 @@ exports.addBooking = async (req, res) => {
 // Get all bookings
 exports.getAllBookings = async (req, res) => {
   const { data, error } = await supabase
-    .from('sample_data')
+    .from('bookings')
     .select('*');
 
   if (error) {
@@ -41,7 +41,7 @@ exports.getBookingById = async (req, res) => {
   const { id } = req.params;
 
   const { data, error } = await supabase
-    .from('sample_data')
+    .from('bookings')
     .select('*')
     .eq('booking_id', id)
     .single();
@@ -57,7 +57,7 @@ exports.getBookingById = async (req, res) => {
 exports.updateBooking = async (req, res) => {
   const { role } = req.user; // Extract role from decoded JWT in middleware
   const { id } = req.params;
-  const { name, pax, hotel, room_no, pay_status } = req.body;
+  const { customer_name, room_number, check_in_date, check_out_date, created_at, property_id, total_pax, room_type, no_of_rooms, mobile_no, email_id, tariff, market_segment, business_source, advance_payment, payment_mode, special_instructions, booking_id } = req.body;
 
   // Allow only admins to update data
   if (role !== 'admin') {
@@ -65,8 +65,8 @@ exports.updateBooking = async (req, res) => {
   }
 
   const { data, error } = await supabase
-    .from('sample_data')
-    .update({ name, pax, hotel, room_no, pay_status })
+    .from('bookings')
+    .update({ customer_name, room_number, check_in_date, check_out_date, created_at, property_id, total_pax, room_type, no_of_rooms, mobile_no, email_id, tariff, market_segment, business_source, advance_payment, payment_mode, special_instructions, booking_id})
     .eq('booking_id', id);
 
   if (error) {
@@ -87,7 +87,7 @@ exports.deleteBooking = async (req, res) => {
   }
 
   const { data, error } = await supabase
-    .from('sample_data')
+    .from('bookings')
     .delete()
     .eq('booking_id', id);
 
