@@ -11,7 +11,7 @@ exports.addBooking = async (req, res) => {
   if (role !== 'user' && role !== 'admin') {
     return res.status(403).json({ message: 'Access denied. Only users or admins can add bookings.' });
   }
-
+  //c'mon man you are 
   const { data, error } = await supabase
     .from('sample_data')
     .insert([{ name, pax, hotel, room_no, pay_status }]);
