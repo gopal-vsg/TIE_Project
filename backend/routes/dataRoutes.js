@@ -18,4 +18,8 @@ router.put('/:id', authMiddleware, bookingController.updateBooking);
 // Delete a booking
 router.delete('/:id', authMiddleware, bookingController.deleteBooking);
 
+// Get user by name
+router.get('/user/:name', authMiddleware, bookingController.getUserByName);
+
+
 module.exports = router;

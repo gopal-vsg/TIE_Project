@@ -97,3 +97,25 @@ exports.deleteBooking = async (req, res) => {
 
   res.status(200).json({ message: 'Booking deleted successfully', data });
 };
+
+// Get user by name
+exports.getUserByName = async (req, res) => {
+  const { name } = req.params;  // Get the name from the request parameter
+
+  // Query the database for the user with the given name
+  const { data, error } = await supabase
+    .from('bookings')  // Replace 'users' with the correct table name if different
+    .select('*')
+    .ilike('customer_name', `%${name}%`)  // Use 'ilike' for case-insensitive partial matching
+    .single();  // If you expect only one result
+
+  if (error) {
+    return res.status(500).json({ message: 'Error retrieving user', error });
+  }
+
+  if (!data) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  res.status(200).json({ message: 'User retrieved successfully', data });
+};
