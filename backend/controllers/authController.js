@@ -67,7 +67,6 @@ exports.loginUser = async (req, res) => {
   const { userid, password } = req.body;
 
   try {
-    // Fetch user from the database
     const { data: user, error } = await supabase
       .from('sample')
       .select('*')
@@ -174,7 +173,6 @@ exports.deleteUser = async (req, res) => {
     .from('sample')
     .delete()
     .eq('userid', userid);
-
   if (error) {
     return res.status(500).json({ message: 'Error deleting user' });
   }

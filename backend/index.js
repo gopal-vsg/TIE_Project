@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const dataRoutes = require('./routes/dataRoutes');
+const channelRoutes = require('./routes/channelRoutes');
 
 const app = express();
 
@@ -16,6 +17,8 @@ app.use('/api/auth', authRoutes);
 
 // Data routes for bookings (requires authentication)
 app.use('/api/data', dataRoutes);
+
+app.use('/api/channel', channelRoutes);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
