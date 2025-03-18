@@ -1,8 +1,14 @@
 const express = require('express');
-const router = express.Router();
+const multer = require('multer');
 const authMiddleware = require('../middlewares/authMiddleware');
-const channelController = require('../controllers/channelController');
+const { uploadChannelBookings } = require('../controllers/channelController');
 
-router.get('/hello', authMiddleware, channelController.hello);
+const router = express.Router();
+
+// Configure Multer to store uploaded files temporarily in the 'uploads/' folder
+const upload = multer({ dest: 'uploads/' });
+
+// Route to handle the file upload for channel bookings
+router.post('/upload', authMiddleware, upload.single('file'), uploadChannelBookings);
 
 module.exports = router;
